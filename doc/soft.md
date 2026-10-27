@@ -4,8 +4,9 @@
   - [Перед установкой](#перед-установкой)
   - [Общие зависимости](#общие-зависимости)
   - [Генератор случайных инструкций RISC-V AAPG `2d7d40f`](#генератор-случайных-инструкций-risc-v-aapg-2d7d40f)
-  - [ПО riscv-gnu-toolchain `6d7b5b7`](#по-riscv-gnu-toolchain-6d7b5b7)
-  - [Программная модель RISC-V Spike ISS `00dfa28`](#программная-модель-risc-v-spike-iss-00dfa28)
+  - [ПО riscv-gnu-toolchain RV32IM `6d7b5b7`](#по-riscv-gnu-toolchain-rv32im-6d7b5b7)
+  - [ПО riscv-gnu-toolchain RV64GCV `6d7b5b7`](#по-riscv-gnu-toolchain-rv64gcv-6d7b5b7)
+  - [Программная модель RISC-V Spike ISS `887d02e`](#программная-модель-risc-v-spike-iss-887d02e)
   - [Verilator 5.024 `522bead`](#verilator-5024-522bead)
   - [GTKWave](#gtkwave)
   - [Завершение установки](#завершение-установки)
@@ -15,7 +16,7 @@
 
 Установка разбита на шаги. Если какое-то ПО из списка уже установлено на вашей машине, то можно попробовать пропустить его установку. Однако, **если версия ПО не совпадает c указанной в заголовке, то автор не гарантирует его корректной работы в рамках данного курса.**
 
-Подразумевается, что репозиторий склонирован способом, который указан в разделе [работа с репозиторием](../README.md/#работа-с-репозиторием) основого README, а также что вы на каждом этапе находитесь в корневой директории `riscv-tests-basic`.
+Подразумевается, что репозиторий склонирован способом, который указан в разделе [работа с репозиторием](../README.md#клонирование-и-работа) основого README, а также что вы на каждом этапе находитесь в корневой директории `riscv-tests-basic`.
 
 
 ## Общие зависимости
@@ -23,9 +24,10 @@
 Устанавливаем общие зависимости:
 
 ```bash
-sudo apt-get install git make gcc g++ python3 python3-pip \
-libyaml-dev libpython2.7-dev -y
-sudo pip install pathlib3x typeguard typing_utils
+sudo apt-get install git make gcc g++ clang python3 \
+python3-pip libyaml-dev libpython2.7-dev -y
+sudo pip install pathlib3x typeguard typing_utils \
+pybind11 meson==1.8.1
 ```
 
 Определяем директорию установки:
@@ -46,7 +48,7 @@ sudo python3 setup.py install
 
 Да, `setup.py` действительно нужно выполнить дважды.
 
-## ПО riscv-gnu-toolchain `6d7b5b7`
+## ПО riscv-gnu-toolchain RV32IM `6d7b5b7`
 
 Переходим в директорию и устанавливаем зависимости:
 
@@ -62,6 +64,7 @@ libslirp-dev -y
 Создаем директорию сборки и переходим в нее:
 
 ```bash
+sudo rm -rf build
 mkdir build
 cd build
 ```
@@ -79,7 +82,7 @@ cd build
 sudo make -j $(nproc)
 ```
 
-Добавляем в PATH для всех рользователей:
+Добавляем в PATH для всех пользователей:
 
 ```bash
 echo "PATH=$INSTALL_DIR/riscv-gnu-toolchain/bin"':$PATH' | sudo tee -a /etc/profile
@@ -93,7 +96,50 @@ echo "PATH=$INSTALL_DIR/riscv-gnu-toolchain/bin"':$PATH' >> ~/.profile
 source ~/.profile
 ```
 
-## Программная модель RISC-V Spike ISS `00dfa28`
+## ПО riscv-gnu-toolchain RV64GCV `6d7b5b7`
+
+Переходим в директорию:
+
+```bash
+cd submodules/riscv-gnu-toolchain
+```
+
+Создаем директорию сборки и переходим в нее:
+
+```bash
+sudo rm -rf build
+mkdir build
+cd build
+```
+
+Конфигурируем:
+
+```
+../configure --prefix=$INSTALL_DIR/riscv-gnu-toolchain-64 \
+--with-arch=rv64gcv_zicsr --with-abi=lp64d
+```
+
+Собираем и устанавливаем (в зависимости от мощности машины время сборки ~5-30 мин):
+
+```bash
+sudo make -j $(nproc)
+```
+
+Добавляем в PATH для всех пользователей:
+
+```bash
+echo "PATH=$INSTALL_DIR/riscv-gnu-toolchain-64/bin"':$PATH' | sudo tee -a /etc/profile
+source /etc/profile
+```
+
+**или** текущего:
+
+```bash
+echo "PATH=$INSTALL_DIR/riscv-gnu-toolchain-64/bin"':$PATH' >> ~/.profile
+source ~/.profile
+```
+
+## Программная модель RISC-V Spike ISS `887d02e`
 
 Переходим в директорию и устанавливаем зависимости:
 
@@ -112,7 +158,7 @@ cd build
 Конфигурируем:
 
 ```bash
-../configure --prefix=$INSTALL_DIR/spike
+../configure --without-boost --without-boost-asio --without-boost-regex --prefix=$INSTALL_DIR/spike
 ```
 
 Собираем:
@@ -127,7 +173,7 @@ sudo make -j $(nproc)
 sudo make install
 ```
 
-Добавляем в PATH для всех рользователей:
+Добавляем в PATH для всех пользователей:
 
 ```bash
 echo "PATH=$INSTALL_DIR/spike/bin"':$PATH' | sudo tee -a /etc/profile
@@ -174,7 +220,7 @@ sudo make -j $(nproc)
 sudo make install
 ```
 
-Добавляем в PATH для всех рользователей:
+Добавляем в PATH для всех пользователей:
 
 ```bash
 echo "PATH=$INSTALL_DIR/verilator/bin"':$PATH' | sudo tee -a /etc/profile
